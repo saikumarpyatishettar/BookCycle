@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Share, exchange, and discover books with BookCycle, a student book reuse platform.">
+    <title>BookCycle | Share Knowledge</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <header class="navbar">
+        <a href="#" class="brand"><span class="brand-icon">B</span> BookCycle</a>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#books">Explore Books</a>
+            <a href="#how-it-works">How It Works</a>
+        </nav>
+        <button class="btn btn-primary" id="open-form">+ Share a Book</button>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-content">
+                <span class="eyebrow">READ MORE. WASTE LESS.</span>
+                <h1>Give your books a <span>second life.</span></h1>
+                <p>Share the books you've finished, discover your next read, and help fellow students learn for less.</p>
+                <div class="hero-actions">
+                    <a href="#books" class="btn btn-primary">Explore Books</a>
+                    <button class="btn btn-outline" id="hero-share">Share a Book</button>
+                </div>
+                <div class="hero-note">
+                    <span class="status-dot"></span>
+                    Built for students, powered by sharing
+                </div>
+            </div>
+            <div class="hero-art">
+                <div class="book-stack">
+                    <div class="book book-one"><span>THE ART OF</span><strong>LEARNING</strong></div>
+                    <div class="book book-two"><span>THINK</span><strong>BETTER</strong></div>
+                    <div class="book book-three"><span>YOUR NEXT</span><strong>CHAPTER</strong></div>
+                </div>
+                <div class="floating-note">One book can make a difference.</div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div><strong id="total-books">0</strong><span>Books listed</span></div>
+            <div><strong id="available-books">0</strong><span>Available now</span></div>
+            <div><strong id="shared-books">0</strong><span>Books exchanged or taken</span></div>
+        </section>
+
+        <section class="books-section" id="books">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">YOUR NEXT GREAT READ</span>
+                    <h2>Explore the collection</h2>
+                    <p>Find useful books shared by fellow readers.</p>
+                </div>
+            </div>
+
+            <div class="filters">
+                <label class="search-box">
+                    <span aria-hidden="true">⌕</span>
+                    <input type="search" id="search" placeholder="Search by title or author..." aria-label="Search books">
+                </label>
+
+                <select id="category-filter" aria-label="Filter by category">
+                    <option value="All">All categories</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="Novels">Novels</option>
+                    <option value="Reference">Reference</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <select id="availability-filter" aria-label="Filter by availability">
+                    <option value="All">All availability</option>
+                    <option value="Available">Available</option>
+                    <option value="Taken">Taken</option>
+                    <option value="Exchanged">Exchanged</option>
+                </select>
+            </div>
+
+            <div id="book-grid" class="book-grid"></div>
+            <p id="empty-message" class="empty-message" hidden>No books found. Try another search or add a new book.</p>
+        </section>
+
+        <section class="how-section" id="how-it-works">
+            <div class="section-heading centered">
+                <span class="eyebrow">SIMPLE BY DESIGN</span>
+                <h2>How BookCycle works</h2>
+                <p>Three simple steps to keep good books moving.</p>
+            </div>
+            <div class="steps">
+                <article class="step-card">
+                    <span class="step-number">01</span>
+                    <h3>List a book</h3>
+                    <p>Add the details of a book you no longer need and let other students discover it.</p>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">02</span>
+                    <h3>Find your next read</h3>
+                    <p>Search by title, author, or category to find books that match your needs.</p>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">03</span>
+                    <h3>Connect and reuse</h3>
+                    <p>Contact the owner and arrange a donation, exchange, or sharing locally.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <a href="#" class="brand"><span class="brand-icon">B</span> BookCycle</a>
+        <p>Pass on a book. Pass on knowledge.</p>
+        <span>© 2026 BookCycle · Student book reuse platform</span>
+    </footer>
+
+    <dialog id="book-dialog">
+        <form id="book-form">
+            <div class="dialog-heading">
+                <div>
+                    <span class="eyebrow">GIVE A BOOK ANOTHER CHAPTER</span>
+                    <h2 id="form-title">Share a book</h2>
+                </div>
+                <button type="button" class="close-btn" id="close-form" aria-label="Close form">×</button>
+            </div>
+
+            <input type="hidden" id="book-id">
+
+            <label for="title">Book title *</label>
+            <input id="title" name="title" maxlength="100" required placeholder="e.g. Engineering Mathematics">
+
+            <label for="author">Author *</label>
+            <input id="author" name="author" maxlength="80" required placeholder="Author's name">
+
+            <div class="form-row">
+                <div>
+                    <label for="category">Category *</label>
+                    <select id="category" required>
+                        <option value="Academic">Academic</option>
+                        <option value="Competitive Exams">Competitive Exams</option>
+                        <option value="Novels">Novels</option>
+                        <option value="Reference">Reference</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="condition">Condition *</label>
+                    <select id="condition" required>
+                        <option value="Like New">Like New</option>
+                        <option value="Good">Good</option>
+                        <option value="Used">Used</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="description">Description</label>
+            <textarea id="description" maxlength="400" rows="3" placeholder="Edition, notes, or other details..."></textarea>
+
+            <label for="offer">How would you like to offer it? *</label>
+            <select id="offer" required>
+                <option value="Share">Share</option>
+                <option value="Exchange">Exchange</option>
+                <option value="Donate">Donate</option>
+                <option value="Sell">Sell</option>
+            </select>
+
+            <label for="image-url">Book image URL (optional)</label>
+            <input id="image-url" type="url" placeholder="https://example.com/book.jpg">
+
+            <label for="contact">Contact details *</label>
+            <input id="contact" maxlength="120" required placeholder="Email or other contact details">
+
+            <label for="owner">Your name *</label>
+            <input id="owner" maxlength="60" required placeholder="Student name">
+
+            <label for="status">Availability</label>
+            <select id="status">
+                <option value="Available">Available</option>
+                <option value="Taken">Taken</option>
+                <option value="Exchanged">Exchanged</option>
+            </select>
+
+            <p class="form-error" id="form-error" role="alert"></p>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" id="cancel-form">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Book</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
