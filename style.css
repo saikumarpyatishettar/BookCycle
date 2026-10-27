@@ -1,17 +1,17 @@
 
 :root {
-    --navy: #6D28D9;
-    --navy-dark: #4C1D95;
-    --blue: #7C3AED;
-    --background: #FAF8FF;
-    --white: #FFFFFF;
-    --text: #302447;
-    --muted: #80758F;
-    --border: #E9DFF7;
-    --green: #24734D;
-    --green-bg: #E8F6ED;
+    --navy: #142b4a;
+    --navy-dark: #0c1d34;
+    --blue: #315b88;
+    --background: #f7f9fc;
+    --white: #ffffff;
+    --text: #24344b;
+    --muted: #758195;
+    --border: #e2e8f0;
+    --green: #24734d;
+    --green-bg: #e8f6ed;
     --radius: 16px;
-    --shadow: 0 8px 28px rgba(109, 40, 217, 0.09);
+    --shadow: 0 8px 28px rgba(20, 43, 74, 0.07);
 }
 
 * {
@@ -94,12 +94,12 @@ a {
 .navbar nav a {
     font-size: 14px;
     font-weight: 600;
-    color: #655A77;
+    color: #526177;
     transition: color 0.2s;
 }
 
 .navbar nav a:hover {
-    color: var(--blue);
+    color: var(--navy);
 }
 
 .btn {
@@ -129,13 +129,13 @@ a {
 }
 
 .btn-outline {
-    border-color: #D8C7F0;
+    border-color: #cdd7e4;
     background: white;
     color: var(--navy);
 }
 
 .btn-outline:hover {
-    background: #F5F0FF;
+    background: #f0f4f9;
 }
 
 .hero {
@@ -146,7 +146,7 @@ a {
     align-items: center;
     gap: 45px;
     overflow: hidden;
-    background: linear-gradient(120deg, #FAF8FF, #F0E7FF);
+    background: linear-gradient(110deg, #f7f9fc, #edf3fa);
 }
 
 .hero-content {
@@ -169,12 +169,12 @@ a {
 }
 
 .hero h1 span {
-    color: #8B5CF6;
+    color: #466b96;
 }
 
 .hero-content > p {
     max-width: 470px;
-    color: #716680;
+    color: #64738a;
     font-size: 16px;
     line-height: 1.8;
 }
@@ -191,7 +191,7 @@ a {
     display: flex;
     align-items: center;
     gap: 9px;
-    color: #756A85;
+    color: #68778b;
     font-size: 12px;
 }
 
@@ -199,7 +199,7 @@ a {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #3B9B6B;
+    background: #3b9b6b;
 }
 
 .hero-art {
@@ -207,7 +207,7 @@ a {
     display: grid;
     place-items: center;
     position: relative;
-    background: radial-gradient(ellipse, #E4D5FF 0%, #F3ECFF 62%, transparent 72%);
+    background: radial-gradient(ellipse, #dbe6f4 0%, #edf3fa 62%, transparent 72%);
 }
 
 .book-stack {
@@ -221,7 +221,7 @@ a {
     width: 155px;
     height: 200px;
     border-radius: 5px 12px 12px 5px;
-    box-shadow: 9px 12px 22px rgba(42, 20, 72, 0.19);
+    box-shadow: 9px 12px 22px rgba(16, 36, 62, 0.19);
     padding: 23px 17px;
     display: flex;
     flex-direction: column;
@@ -245,22 +245,22 @@ a {
     left: 8px;
     top: 20px;
     transform: rotate(-13deg);
-    background: #A78BFA;
+    background: #6f8caf;
 }
 
 .book-two {
     left: 95px;
     top: 5px;
     transform: rotate(10deg);
-    background: #E9D5FF;
-    color: #4C1D95;
+    background: #d1b17a;
+    color: #28334a;
 }
 
 .book-three {
     left: 66px;
     top: 25px;
     transform: rotate(-2deg);
-    background: #6D28D9;
+    background: #1b3455;
 }
 
 .floating-note {
@@ -337,7 +337,6 @@ a {
     border: 1px solid var(--border);
     border-radius: 9px;
     color: var(--muted);
-    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .search-box > span {
@@ -351,11 +350,6 @@ a {
     outline: none;
     background: transparent;
     color: var(--text);
-}
-
-.search-box:focus-within {
-    border-color: #A78BFA;
-    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
 }
 
 .filters select,
@@ -379,8 +373,8 @@ a {
 input:focus,
 select:focus,
 textarea:focus {
-    border-color: #A78BFA;
-    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+    border-color: #7596bd !important;
+    box-shadow: 0 0 0 3px rgba(49, 91, 136, 0.1);
 }
 
 .book-grid {
@@ -408,7 +402,7 @@ textarea:focus {
     display: grid;
     place-items: center;
     overflow: hidden;
-    background: #F3ECFF;
+    background: #edf2f8;
 }
 
 .book-cover img {
@@ -425,7 +419,7 @@ textarea:focus {
     padding: 20px;
     text-align: center;
     color: var(--navy);
-    background: linear-gradient(145deg, #F0E7FF, #FAF8FF);
+    background: linear-gradient(145deg, #e8eef6, #f6f8fb);
 }
 
 .cover-placeholder span {
@@ -461,8 +455,8 @@ textarea:focus {
 }
 
 .category-tag {
-    color: #6D28D9;
-    background: #F3E8FF;
+    color: #375d89;
+    background: #edf3fa;
 }
 
 .availability-tag.available {
@@ -471,8 +465,8 @@ textarea:focus {
 }
 
 .availability-tag.unavailable {
-    color: #805A2C;
-    background: #FBF0DF;
+    color: #805a2c;
+    background: #fbf0df;
 }
 
 .book-info h3 {
@@ -492,7 +486,7 @@ textarea:focus {
 .book-description {
     margin-top: 12px;
     min-height: 42px;
-    color: #716680;
+    color: #617086;
     font-size: 12px;
     line-height: 1.7;
     overflow-wrap: anywhere;
@@ -525,22 +519,20 @@ textarea:focus {
     color: var(--navy);
     font-size: 12px;
     font-weight: 700;
-    transition: background 0.2s, border-color 0.2s;
 }
 
 .card-actions button:hover {
-    background: #F5F0FF;
-    border-color: #D8C7F0;
+    background: #f1f5fa;
 }
 
 .card-actions .contact-btn {
-    background: #6D28D9;
+    background: var(--navy);
     color: white;
-    border-color: #6D28D9;
+    border-color: var(--navy);
 }
 
 .card-actions .contact-btn:hover {
-    background: #4C1D95;
+    background: var(--navy-dark);
 }
 
 .empty-message {
@@ -570,16 +562,10 @@ textarea:focus {
     background: white;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.step-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
 }
 
 .step-number {
-    color: #7C3AED;
+    color: #557ba7;
     font-size: 13px;
     font-weight: 800;
 }
@@ -605,7 +591,6 @@ footer {
     justify-content: space-between;
     gap: 15px;
     border-top: 1px solid var(--border);
-    background: white;
 }
 
 footer p,
@@ -623,7 +608,7 @@ dialog {
     border-radius: 18px;
     background: white;
     color: var(--text);
-    box-shadow: 0 20px 80px rgba(76, 29, 149, 0.22);
+    box-shadow: 0 20px 80px rgba(12, 29, 52, 0.22);
     overflow-y: auto;
 }
 
@@ -632,7 +617,7 @@ dialog[open] {
 }
 
 dialog::backdrop {
-    background: rgba(35, 18, 58, 0.58);
+    background: rgba(12, 29, 52, 0.58);
     backdrop-filter: blur(3px);
 }
 
@@ -641,7 +626,6 @@ dialog::backdrop {
         opacity: 0;
         transform: translateY(8px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -671,10 +655,6 @@ dialog::backdrop {
     color: var(--navy);
     font-size: 24px;
     line-height: 1;
-}
-
-.close-btn:hover {
-    background: #F5F0FF;
 }
 
 #book-form > label,
@@ -708,7 +688,7 @@ dialog::backdrop {
 
 .form-error {
     margin-top: 10px;
-    color: #B42318;
+    color: #b42318;
     font-size: 12px;
 }
 
@@ -727,7 +707,7 @@ dialog::backdrop {
     max-width: calc(100% - 40px);
     padding: 13px 18px;
     border-radius: 10px;
-    background: #4C1D95;
+    background: var(--navy);
     color: white;
     font-size: 13px;
     box-shadow: var(--shadow);
@@ -740,12 +720,6 @@ dialog::backdrop {
 .toast.show {
     opacity: 1;
     transform: translateY(0);
-}
-
-button:focus-visible,
-a:focus-visible {
-    outline: 3px solid #A78BFA;
-    outline-offset: 3px;
 }
 
 @media (max-width: 900px) {

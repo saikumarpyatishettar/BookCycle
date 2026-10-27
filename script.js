@@ -1,431 +1,395 @@
 
-const STORAGE_KEY = "bookcycle_books";
+document.addEventListener("DOMContentLoaded", () => {
+    const $ = selector => document.querySelector(selector);
 
-const sampleBooks = [
-    {
-        id: "sample-1",
-        title: "Engineering Mathematics",
-        author: "B. S. Grewal",
-        category: "Academic",
-        condition: "Good",
-        description: "A useful reference for engineering mathematics and problem-solving practice.",
-        offer: "Share",
-        imageUrl: "",
-        contact: "maths.student@example.com",
-        owner: "Rahul",
-        status: "Available"
-    },
-    {
-        id: "sample-2",
-        title: "Atomic Habits",
-        author: "James Clear",
-        category: "Novels",
-        condition: "Like New",
-        description: "A popular book about building better habits and improving every day.",
-        offer: "Exchange",
-        imageUrl: "",
-        contact: "reader@example.com",
-        owner: "Ananya",
-        status: "Available"
-    },
-    {
-        id: "sample-3",
-        title: "Quantitative Aptitude",
-        author: "R. S. Aggarwal",
-        category: "Competitive Exams",
-        condition: "Used",
-        description: "Practice material for quantitative aptitude and competitive examinations.",
-        offer: "Donate",
-        imageUrl: "",
-        contact: "student@example.com",
-        owner: "Arjun",
-        status: "Taken"
-    },
-    {
-        id: "sample-4",
-        title: "Introduction to Algorithms",
-        author: "Thomas H. Cormen",
-        category: "Reference",
-        condition: "Good",
-        description: "A detailed reference for algorithms, data structures, and computer science.",
-        offer: "Share",
-        imageUrl: "",
-        contact: "cs.student@example.com",
-        owner: "Priya",
-        status: "Available"
-    },
-    {
-        id: "sample-5",
-        title: "The Alchemist",
-        author: "Paulo Coelho",
-        category: "Novels",
-        condition: "Good",
-        description: "An inspiring story about following your dreams and finding your purpose.",
-        offer: "Exchange",
-        imageUrl: "",
-        contact: "books@example.com",
-        owner: "Kiran",
-        status: "Exchanged"
-    },
-    {
-        id: "sample-6",
-        title: "Computer Networks",
-        author: "Andrew S. Tanenbaum",
-        category: "Academic",
-        condition: "Like New",
-        description: "Networking concepts, protocols, and useful computer science fundamentals.",
-        offer: "Sell",
-        imageUrl: "",
-        contact: "networking@example.com",
-        owner: "Meera",
-        status: "Available"
-    }
-];
+    const dialog = $("#book-dialog");
+    const form = $("#book-form");
+    const grid = $("#book-grid");
+    const searchInput = $("#search");
+    const categoryFilter = $("#category-filter");
+    const availabilityFilter = $("#availability-filter");
+    const errorMessage = $("#form-error");
+    const toast = $("#toast");
 
-const bookGrid = document.getElementById("book-grid");
-const searchInput = document.getElementById("search");
-const categoryFilter = document.getElementById("category-filter");
-const availabilityFilter = document.getElementById("availability-filter");
-const bookDialog = document.getElementById("book-dialog");
-const bookForm = document.getElementById("book-form");
-const formTitle = document.getElementById("form-title");
-const formError = document.getElementById("form-error");
-const emptyMessage = document.getElementById("empty-message");
-const toast = document.getElementById("toast");
+    const STORAGE_KEY = "bookcycle_books";
 
-let books = loadBooks();
-let toastTimeout;
+    let books = loadBooks();
+    let toastTimer;
 
-function loadBooks() {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-
-        if (stored === null) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleBooks));
-            return sampleBooks.map(book => ({ ...book }));
-        }
-
-        const parsed = JSON.parse(stored);
-
-        if (
-            !Array.isArray(parsed) ||
-            !parsed.every(book =>
-                book &&
-                typeof book.id === "string" &&
-                typeof book.title === "string" &&
-                typeof book.author === "string"
-            )
-        ) {
+    function loadBooks() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const parsed = saved ? JSON.parse(saved) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
             return [];
         }
-
-        return parsed;
-    } catch {
-        return [];
     }
-}
 
-function saveBooks() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
-        return true;
-    } catch {
-        showToast("Unable to save. Check browser storage settings.");
-        return false;
-    }
-}
-
-function escapeHTML(value = "") {
-    return String(value).replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[character]);
-}
-
-function safeImageUrl(value) {
-    try {
-        const url = new URL(value);
-
-        if (url.protocol === "https:" || url.protocol === "http:") {
-            return url.href;
+    function saveBooks() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+            return true;
+        } catch {
+            showToast("Unable to save. Check your browser storage.");
+            return false;
         }
-    } catch {
+    }
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+
+    function openForm(book = null) {
+        form.reset();
+        errorMessage.textContent = "";
+
+        $("#book-id").value = book ? String(book.id) : "";
+        $("#form-title").textContent = book ? "Edit book" : "Share a book";
+
+        $("#title").value = book?.title || "";
+        $("#author").value = book?.author || "";
+        $("#category").value = book?.category || "Academic";
+        $("#condition").value = book?.condition || "Like New";
+        $("#description").value = book?.description || "";
+        $("#offer").value = book?.offer || "Share";
+        $("#image-url").value = book?.image || "";
+        $("#contact").value = book?.contact || "";
+        $("#owner").value = book?.owner || "";
+        $("#status").value = book?.status || "Available";
+
+        if (!dialog.open) {
+            dialog.showModal();
+        }
+    }
+
+    function closeForm() {
+        dialog.close();
+        errorMessage.textContent = "";
+    }
+
+    function getFilteredBooks() {
+        const query = searchInput.value.trim().toLowerCase();
+        const category = categoryFilter.value;
+        const status = availabilityFilter.value;
+
+        return books.filter(book => {
+            const searchableText = [
+                book.title,
+                book.author,
+                book.category,
+                book.description,
+                book.owner
+            ].join(" ").toLowerCase();
+
+            return searchableText.includes(query) &&
+                (category === "All" || book.category === category) &&
+                (status === "All" || book.status === status);
+        });
+    }
+
+    function renderBooks() {
+        const filteredBooks = getFilteredBooks();
+
+        $("#total-books").textContent = books.length;
+
+        $("#available-books").textContent =
+            books.filter(book => book.status === "Available").length;
+
+        $("#shared-books").textContent =
+            books.filter(book =>
+                ["Taken", "Exchanged"].includes(book.status)
+            ).length;
+
+        $("#empty-message").hidden = filteredBooks.length > 0;
+
+        grid.innerHTML = filteredBooks.map(book => {
+            const image = safeImageURL(book.image);
+
+            return `
+                <article class="book-card">
+                    <div class="book-cover">
+                        ${
+                            image
+                                ? `<img src="${escapeHTML(image)}"
+                                        alt="${escapeHTML(book.title)}"
+                                        loading="lazy">`
+                                : `<div class="book-placeholder"
+                                        aria-hidden="true">📚</div>`
+                        }
+                    </div>
+
+                    <div class="book-info">
+                        <span class="book-category">
+                            ${escapeHTML(book.category)}
+                        </span>
+
+                        <h3>${escapeHTML(book.title)}</h3>
+
+                        <p>By ${escapeHTML(book.author)}</p>
+
+                        <p>Condition: ${escapeHTML(book.condition)}</p>
+
+                        <p>Offer: ${escapeHTML(book.offer)}</p>
+
+                        <p>${escapeHTML(book.description || "No description provided.")}</p>
+
+                        <p class="book-status status-${book.status.toLowerCase()}">
+                            ${escapeHTML(book.status)}
+                        </p>
+
+                        <p>Shared by ${escapeHTML(book.owner)}</p>
+
+                        <div class="book-actions">
+                            <button
+                                type="button"
+                                class="btn btn-outline"
+                                data-action="contact"
+                                data-id="${book.id}">
+                                Contact owner
+                            </button>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline"
+                                data-action="edit"
+                                data-id="${book.id}">
+                                Edit
+                            </button>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline"
+                                data-action="delete"
+                                data-id="${book.id}">
+                                Delete
+                            </button>
+
+                            ${
+                                book.status === "Available"
+                                    ? `<button
+                                            type="button"
+                                            class="btn btn-primary"
+                                            data-action="take"
+                                            data-id="${book.id}">
+                                            Mark as taken
+                                       </button>`
+                                    : ""
+                            }
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    function safeImageURL(value) {
+        if (!value) return "";
+
+        try {
+            const url = new URL(value);
+
+            if (url.protocol === "https:" || url.protocol === "http:") {
+                return url.href;
+            }
+        } catch {
+            return "";
+        }
+
         return "";
     }
 
-    return "";
-}
+    function handleSave(event) {
+        event.preventDefault();
+        errorMessage.textContent = "";
 
-function showToast(message) {
-    clearTimeout(toastTimeout);
-    toast.textContent = message;
-    toast.classList.add("show");
+        const book = {
+            id: $("#book-id").value
+                ? Number($("#book-id").value)
+                : Date.now(),
 
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2600);
-}
+            title: $("#title").value.trim(),
+            author: $("#author").value.trim(),
+            category: $("#category").value,
+            condition: $("#condition").value,
+            description: $("#description").value.trim(),
+            offer: $("#offer").value,
+            image: $("#image-url").value.trim(),
+            contact: $("#contact").value.trim(),
+            owner: $("#owner").value.trim(),
+            status: $("#status").value
+        };
 
-function updateStats() {
-    document.getElementById("total-books").textContent = books.length;
+        if (
+            !book.title ||
+            !book.author ||
+            !book.category ||
+            !book.contact ||
+            !book.owner
+        ) {
+            errorMessage.textContent =
+                "Please fill in all required fields.";
+            return;
+        }
 
-    document.getElementById("available-books").textContent =
-        books.filter(book => book.status === "Available").length;
+        if (book.image && !safeImageURL(book.image)) {
+            errorMessage.textContent =
+                "Please enter a valid HTTP or HTTPS image URL.";
+            return;
+        }
 
-    document.getElementById("shared-books").textContent =
-        books.filter(book =>
-            book.status === "Taken" || book.status === "Exchanged"
-        ).length;
-}
+        const editing = Boolean($("#book-id").value);
+        const previousBooks = [...books];
 
-function getFilteredBooks() {
-    const query = searchInput.value.trim().toLowerCase();
-    const category = categoryFilter.value;
-    const status = availabilityFilter.value;
+        if (editing) {
+            const index = books.findIndex(item => item.id === book.id);
 
-    return books.filter(book => {
-        const matchesSearch =
-            book.title.toLowerCase().includes(query) ||
-            book.author.toLowerCase().includes(query);
+            if (index === -1) {
+                errorMessage.textContent =
+                    "This book could not be found.";
+                return;
+            }
 
-        const matchesCategory =
-            category === "All" || book.category === category;
+            books[index] = book;
+        } else {
+            books.unshift(book);
+        }
 
-        const matchesStatus =
-            status === "All" || book.status === status;
+        if (!saveBooks()) {
+            books = previousBooks;
+            return;
+        }
 
-        return matchesSearch && matchesCategory && matchesStatus;
+        closeForm();
+        renderBooks();
+
+        showToast(
+            editing
+                ? "Book details updated successfully!"
+                : "Your book has been shared successfully!"
+        );
+
+        if (!editing) {
+            $("#books").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    }
+
+    $("#open-form").addEventListener("click", () => openForm());
+    $("#hero-share").addEventListener("click", () => openForm());
+    $("#close-form").addEventListener("click", closeForm);
+    $("#cancel-form").addEventListener("click", closeForm);
+
+    form.addEventListener("submit", handleSave);
+
+    dialog.addEventListener("click", event => {
+        if (event.target === dialog) {
+            closeForm();
+        }
     });
-}
 
-function renderBooks() {
-    const filteredBooks = getFilteredBooks();
+    searchInput.addEventListener("input", renderBooks);
+    categoryFilter.addEventListener("change", renderBooks);
+    availabilityFilter.addEventListener("change", renderBooks);
 
-    emptyMessage.hidden = filteredBooks.length !== 0;
+    grid.addEventListener("click", event => {
+        const button = event.target.closest("[data-action]");
 
-    bookGrid.innerHTML = filteredBooks.map(book => {
-        const imageUrl = safeImageUrl(book.imageUrl || "");
-        const available = book.status === "Available";
+        if (!button) return;
 
-        const cover = imageUrl
-            ? `<img src="${escapeHTML(imageUrl)}" alt="Cover of ${escapeHTML(book.title)}" loading="lazy">`
-            : `<div class="cover-placeholder">
-                   <div>
-                       <span>${escapeHTML(book.category)}</span>
-                       <strong>${escapeHTML(book.title)}</strong>
-                   </div>
-               </div>`;
+        const id = Number(button.dataset.id);
+        const action = button.dataset.action;
+        const book = books.find(item => item.id === id);
 
-        return `
-            <article class="book-card">
-                <div class="book-cover">${cover}</div>
+        if (!book) {
+            showToast("Book not found.");
+            return;
+        }
 
-                <div class="book-info">
-                    <div class="card-topline">
-                        <span class="category-tag">${escapeHTML(book.category)}</span>
-                        <span class="availability-tag ${available ? "available" : "unavailable"}">
-                            ${escapeHTML(book.status)}
-                        </span>
-                    </div>
+        if (action === "edit") {
+            openForm(book);
+        }
 
-                    <h3>${escapeHTML(book.title)}</h3>
-                    <p class="book-author">by ${escapeHTML(book.author)}</p>
-                    <p class="book-description">${escapeHTML(book.description || "No description provided.")}</p>
+        if (action === "delete") {
+            if (!confirm(`Delete "${book.title}" from BookCycle?`)) {
+                return;
+            }
 
-                    <div class="book-meta">
-                        <span>Condition: ${escapeHTML(book.condition || "Not specified")}</span>
-                        <span>${escapeHTML(book.offer || "Share")}</span>
-                    </div>
+            const previousBooks = [...books];
+            books = books.filter(item => item.id !== id);
 
-                    <div class="book-meta">
-                        <span>Listed by ${escapeHTML(book.owner || "Student")}</span>
-                    </div>
+            if (!saveBooks()) {
+                books = previousBooks;
+                return;
+            }
 
-                    <div class="card-actions">
-                        <button type="button" data-action="contact" data-id="${escapeHTML(book.id)}">Contact</button>
-                        <button type="button" data-action="edit" data-id="${escapeHTML(book.id)}">Edit</button>
-                        <button type="button" data-action="status" data-id="${escapeHTML(book.id)}">Status</button>
-                        <button type="button" data-action="delete" data-id="${escapeHTML(book.id)}">Delete</button>
-                    </div>
-                </div>
-            </article>
-        `;
-    }).join("");
+            renderBooks();
+            showToast("Book listing deleted.");
+        }
 
-    updateStats();
-}
+        if (action === "take") {
+            const previousStatus = book.status;
+            book.status = "Taken";
 
-function openBookForm(book = null) {
-    bookForm.reset();
-    formError.textContent = "";
+            if (!saveBooks()) {
+                book.status = previousStatus;
+                return;
+            }
 
-    document.getElementById("book-id").value = book ? book.id : "";
+            renderBooks();
+            showToast("Book marked as taken.");
+        }
 
-    formTitle.textContent = book ? "Edit book" : "Share a book";
+        if (action === "contact") {
+            const contact = book.contact.trim();
 
-    document.getElementById("title").value = book?.title || "";
-    document.getElementById("author").value = book?.author || "";
-    document.getElementById("category").value = book?.category || "Academic";
-    document.getElementById("condition").value = book?.condition || "Good";
-    document.getElementById("description").value = book?.description || "";
-    document.getElementById("offer").value = book?.offer || "Share";
-    document.getElementById("image-url").value = book?.imageUrl || "";
-    document.getElementById("contact").value = book?.contact || "";
-    document.getElementById("owner").value = book?.owner || "";
-    document.getElementById("status").value = book?.status || "Available";
+            if (!contact) {
+                showToast("No contact details available.");
+                return;
+            }
 
-    bookDialog.showModal();
-}
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function closeBookForm() {
-    bookDialog.close();
-    formError.textContent = "";
-}
+            if (emailPattern.test(contact)) {
+                location.href = `mailto:${contact}`;
+            } else {
+                if (confirm(`Contact ${book.owner} using: ${contact}\n\nCopy these details?`)) {
+                    const temporaryInput = document.createElement("textarea");
+                    temporaryInput.value = contact;
+                    document.body.appendChild(temporaryInput);
+                    temporaryInput.select();
 
-document.getElementById("open-form").addEventListener("click", () => {
-    openBookForm();
-});
+                    try {
+                        document.execCommand("copy");
+                        showToast("Contact details copied.");
+                    } catch {
+                        showToast(`Contact details: ${contact}`);
+                    }
 
-document.getElementById("hero-share").addEventListener("click", () => {
-    openBookForm();
-});
+                    temporaryInput.remove();
+                }
+            }
+        }
+    });
 
-document.getElementById("close-form").addEventListener("click", closeBookForm);
-document.getElementById("cancel-form").addEventListener("click", closeBookForm);
-
-bookDialog.addEventListener("click", event => {
-    if (event.target === bookDialog) {
-        closeBookForm();
-    }
-});
-
-searchInput.addEventListener("input", renderBooks);
-categoryFilter.addEventListener("change", renderBooks);
-availabilityFilter.addEventListener("change", renderBooks);
-
-bookForm.addEventListener("submit", event => {
-    event.preventDefault();
-    formError.textContent = "";
-
-    const id = document.getElementById("book-id").value;
-
-    const title = document.getElementById("title").value.trim();
-    const author = document.getElementById("author").value.trim();
-    const imageInput = document.getElementById("image-url").value.trim();
-    const contact = document.getElementById("contact").value.trim();
-    const owner = document.getElementById("owner").value.trim();
-
-    if (!title || !author || !contact || !owner) {
-        formError.textContent = "Please fill in all required fields.";
-        return;
-    }
-
-    if (imageInput && !safeImageUrl(imageInput)) {
-        formError.textContent = "Enter a valid HTTP or HTTPS image URL.";
-        return;
-    }
-
-    const existingBook = books.find(book => book.id === id);
-
-    const book = {
-        id: existingBook ? existingBook.id : (
-            typeof crypto.randomUUID === "function"
-                ? crypto.randomUUID()
-                : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-        ),
-        title,
-        author,
-        category: document.getElementById("category").value,
-        condition: document.getElementById("condition").value,
-        description: document.getElementById("description").value.trim(),
-        offer: document.getElementById("offer").value,
-        imageUrl: imageInput ? safeImageUrl(imageInput) : "",
-        contact,
-        owner,
-        status: document.getElementById("status").value
-    };
-
-    const previousBooks = books;
-
-    if (existingBook) {
-        books = books.map(item => item.id === id ? book : item);
-    } else {
-        books = [book, ...books];
-    }
-
-    if (!saveBooks()) {
-        books = previousBooks;
-        return;
-    }
-
-    closeBookForm();
     renderBooks();
-    showToast(existingBook ? "Book updated successfully." : "Book added successfully.");
 });
-
-bookGrid.addEventListener("click", event => {
-    const button = event.target.closest("button[data-action]");
-
-    if (!button) return;
-
-    const book = books.find(item => item.id === button.dataset.id);
-
-    if (!book) return;
-
-    const action = button.dataset.action;
-
-    if (action === "contact") {
-        alert(
-            `Book: ${book.title}\n` +
-            `Owner: ${book.owner}\n` +
-            `Contact: ${book.contact}\n` +
-            `Offer: ${book.offer}\n` +
-            `Availability: ${book.status}`
-        );
-    }
-
-    if (action === "edit") {
-        openBookForm(book);
-    }
-
-    if (action === "status") {
-        const options = ["Available", "Taken", "Exchanged"];
-        const currentIndex = options.indexOf(book.status);
-        const nextStatus = options[(currentIndex + 1) % options.length];
-
-        const previousBooks = books;
-        books = books.map(item =>
-            item.id === book.id ? { ...item, status: nextStatus } : item
-        );
-
-        if (!saveBooks()) {
-            books = previousBooks;
-            return;
-        }
-
-        renderBooks();
-        showToast(`Book marked as ${nextStatus}.`);
-    }
-
-    if (action === "delete") {
-        if (!confirm(`Delete "${book.title}" from your local collection?`)) {
-            return;
-        }
-
-        const previousBooks = books;
-        books = books.filter(item => item.id !== book.id);
-
-        if (!saveBooks()) {
-            books = previousBooks;
-            return;
-        }
-
-        renderBooks();
-        showToast("Book deleted successfully.");
-    }
-});
-
-renderBooks();
