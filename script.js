@@ -11,30 +11,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorMessage = $("#form-error");
     const toast = $("#toast");
 
-    const STORAGE_KEY = "bookcycle_books";
-
-    const API_URL = "https://YOUR-BACKEND-NAME.onrender.com/api/books";
+    const API_URL = "https://bookcycle.onrender.com/api/books";
 
     let books = [];
     let toastTimer;
 
-    function loadBooks() {
+    async function loadBooks() {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            const parsed = saved ? JSON.parse(saved) : [];
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
-    }
+            const response = await fetch(API_URL);
 
-    function saveBooks() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
-            return true;
-        } catch {
-            showToast("Unable to save. Check your browser storage.");
-            return false;
+            if (!response.ok) {
+                throw new Error("Unable to load books.");
+            }
+
+            const data = await response.json();
+            books = Array.isArray(data) ? data : [];
+            renderBooks();
+        } catch (error) {
+            console.error(error);
+            showToast("Unable to connect to BookCycle server.");
         }
     }
 
@@ -63,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
         errorMessage.textContent = "";
 
-        $("#book-id").value = book ? String(book.id) : "";
+        $("#book-id").value = book ? book._id : "";
         $("#form-title").textContent = book ? "Edit book" : "Share a book";
 
         $("#title").value = book?.title || "";
@@ -124,6 +119,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.innerHTML = filteredBooks.map(book => {
             const image = safeImageURL(book.image);
+            const id = escapeHTML(book._id);
+            const statusClass = ["Available", "Taken", "Exchanged"]
+                .includes(book.status)
+                ? book.status.toLowerCase()
+                : "available";
 
             return `
                 <article class="book-card">
@@ -151,9 +151,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         <p>Offer: ${escapeHTML(book.offer)}</p>
 
-                        <p>${escapeHTML(book.description || "No description provided.")}</p>
+                        <p>${escapeHTML(
+                            book.description || "No description provided."
+                        )}</p>
 
-                        <p class="book-status status-${book.status.toLowerCase()}">
+                        <p class="book-status status-${statusClass}">
                             ${escapeHTML(book.status)}
                         </p>
 
@@ -164,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="contact"
-                                data-id="${book.id}">
+                                data-id="${id}">
                                 Contact owner
                             </button>
 
@@ -172,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="edit"
-                                data-id="${book.id}">
+                                data-id="${id}">
                                 Edit
                             </button>
 
@@ -180,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="delete"
-                                data-id="${book.id}">
+                                data-id="${id}">
                                 Delete
                             </button>
 
@@ -190,9 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                             type="button"
                                             class="btn btn-primary"
                                             data-action="take"
-                                            data-id="${book.id}">
+                                            data-id="${id}">
                                             Mark as taken
-                                       </button>`
+                                        </button>`
                                     : ""
                             }
                         </div>
@@ -208,7 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const url = new URL(value);
 
-            if (url.protocol === "https:" || url.protocol === "http:") {
+            if (
+                url.protocol === "https:" ||
+                url.protocol === "http:"
+            ) {
                 return url.href;
             }
         } catch {
@@ -218,15 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
     }
 
-    function handleSave(event) {
+    async function handleSave(event) {
         event.preventDefault();
         errorMessage.textContent = "";
 
         const book = {
-            id: $("#book-id").value
-                ? Number($("#book-id").value)
-                : Date.now(),
-
             title: $("#title").value.trim(),
             author: $("#author").value.trim(),
             category: $("#category").value,
@@ -257,42 +258,46 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const editing = Boolean($("#book-id").value);
-        const previousBooks = [...books];
+        const id = $("#book-id").value;
+        const editing = Boolean(id);
 
-        if (editing) {
-            const index = books.findIndex(item => item.id === book.id);
+        try {
+            const response = await fetch(
+                editing ? `${API_URL}/${id}` : API_URL,
+                {
+                    method: editing ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(book)
+                }
+            );
 
-            if (index === -1) {
-                errorMessage.textContent =
-                    "This book could not be found.";
-                return;
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "Unable to save book."
+                );
             }
 
-            books[index] = book;
-        } else {
-            books.unshift(book);
-        }
+            closeForm();
+            await loadBooks();
 
-        if (!saveBooks()) {
-            books = previousBooks;
-            return;
-        }
+            showToast(
+                editing
+                    ? "Book details updated successfully!"
+                    : "Your book has been shared successfully!"
+            );
 
-        closeForm();
-        renderBooks();
-
-        showToast(
-            editing
-                ? "Book details updated successfully!"
-                : "Your book has been shared successfully!"
-        );
-
-        if (!editing) {
-            $("#books").scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+            if (!editing) {
+                $("#books").scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }
+        } catch (error) {
+            errorMessage.textContent = error.message;
         }
     }
 
@@ -313,14 +318,14 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryFilter.addEventListener("change", renderBooks);
     availabilityFilter.addEventListener("change", renderBooks);
 
-    grid.addEventListener("click", event => {
+    grid.addEventListener("click", async event => {
         const button = event.target.closest("[data-action]");
 
         if (!button) return;
 
-        const id = Number(button.dataset.id);
+        const id = button.dataset.id;
         const action = button.dataset.action;
-        const book = books.find(item => item.id === id);
+        const book = books.find(item => item._id === id);
 
         if (!book) {
             showToast("Book not found.");
@@ -329,6 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (action === "edit") {
             openForm(book);
+            return;
         }
 
         if (action === "delete") {
@@ -336,33 +342,59 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const previousBooks = [...books];
-            books = books.filter(item => item.id !== id);
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: "DELETE"
+                });
 
-            if (!saveBooks()) {
-                books = previousBooks;
-                return;
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || "Unable to delete book."
+                    );
+                }
+
+                await loadBooks();
+                showToast("Book listing deleted.");
+            } catch (error) {
+                showToast(error.message);
             }
 
-            renderBooks();
-            showToast("Book listing deleted.");
+            return;
         }
 
         if (action === "take") {
-            const previousStatus = book.status;
-            book.status = "Taken";
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        status: "Taken"
+                    })
+                });
 
-            if (!saveBooks()) {
-                book.status = previousStatus;
-                return;
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || "Unable to update availability."
+                    );
+                }
+
+                await loadBooks();
+                showToast("Book marked as taken.");
+            } catch (error) {
+                showToast(error.message);
             }
 
-            renderBooks();
-            showToast("Book marked as taken.");
+            return;
         }
 
         if (action === "contact") {
-            const contact = book.contact.trim();
+            const contact = (book.contact || "").trim();
 
             if (!contact) {
                 showToast("No contact details available.");
@@ -374,24 +406,21 @@ document.addEventListener("DOMContentLoaded", () => {
             if (emailPattern.test(contact)) {
                 location.href = `mailto:${contact}`;
             } else {
-                if (confirm(`Contact ${book.owner} using: ${contact}\n\nCopy these details?`)) {
-                    const temporaryInput = document.createElement("textarea");
-                    temporaryInput.value = contact;
-                    document.body.appendChild(temporaryInput);
-                    temporaryInput.select();
-
+                if (
+                    confirm(
+                        `Contact ${book.owner} using: ${contact}\n\nCopy these details?`
+                    )
+                ) {
                     try {
-                        document.execCommand("copy");
+                        await navigator.clipboard.writeText(contact);
                         showToast("Contact details copied.");
                     } catch {
                         showToast(`Contact details: ${contact}`);
                     }
-
-                    temporaryInput.remove();
                 }
             }
         }
     });
 
-    renderBooks();
+    loadBooks();
 });
