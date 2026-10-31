@@ -13,7 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const STORAGE_KEY = "bookcycle_books";
 
-    let books = loadBooks();
+    const API_URL = "https://YOUR-BACKEND-NAME.onrender.com/api/books";
+
+    let books = [];
     let toastTimer;
 
     function loadBooks() {
