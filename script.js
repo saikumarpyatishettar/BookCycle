@@ -118,6 +118,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function safeImageURL(value) {
+        if (!value || typeof value !== "string") {
+            return "";
+        }
+
+        try {
+            const url = new URL(value.trim());
+
+            if (
+                (url.protocol === "https:" || url.protocol === "http:") &&
+                url.hostname.includes(".")
+            ) {
+                return url.href;
+            }
+        } catch {
+            return "";
+        }
+
+        return "";
+    }
+
     function renderBooks() {
         const filteredBooks = getFilteredBooks();
 
@@ -141,11 +162,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="book-cover">
                         ${
                             image
-                                ? `<img src="${escapeHTML(image)}"
+                                ? `<img
+                                        src="${escapeHTML(image)}"
                                         alt="${escapeHTML(book.title)}"
-                                        loading="lazy">`
-                                : `<div class="book-placeholder"
-                                        aria-hidden="true">📚</div>`
+                                        loading="lazy"
+                                        onerror="this.onerror=null; this.remove(); this.parentElement.innerHTML='<div class=&quot;book-placeholder&quot; aria-hidden=&quot;true&quot;>📚</div>';"
+                                    >`
+                                : `<div class="book-placeholder" aria-hidden="true">📚</div>`
                         }
                     </div>
 
@@ -203,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                             data-action="take"
                                             data-id="${escapeHTML(book.id)}">
                                             Mark as taken
-                                       </button>`
+                                        </button>`
                                     : ""
                             }
                         </div>
@@ -211,22 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </article>
             `;
         }).join("");
-    }
-
-    function safeImageURL(value) {
-        if (!value) return "";
-
-        try {
-            const url = new URL(value);
-
-            if (url.protocol === "https:" || url.protocol === "http:") {
-                return url.href;
-            }
-        } catch {
-            return "";
-        }
-
-        return "";
     }
 
     async function handleSave(event) {
