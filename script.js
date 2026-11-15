@@ -11,25 +11,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorMessage = $("#form-error");
     const toast = $("#toast");
 
-    const API_URL = "https://bookcycle.onrender.com/api/books";
+    const API_URL = "http://localhost:5000/api/books";
 
     let books = [];
     let toastTimer;
 
+    async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                ...options.headers
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Something went wrong.");
+        }
+
+        return data;
+    }
+
     async function loadBooks() {
         try {
-            const response = await fetch(API_URL);
+            const data = await apiRequest(API_URL);
 
-            if (!response.ok) {
-                throw new Error("Unable to load books.");
-            }
+            books = data.map(book => ({
+                ...book,
+                id: book._id
+            }));
 
-            const data = await response.json();
-            books = Array.isArray(data) ? data : [];
             renderBooks();
         } catch (error) {
-            console.error(error);
-            showToast("Unable to connect to BookCycle server.");
+            showToast("Unable to load books: " + error.message);
         }
     }
 
@@ -58,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
         errorMessage.textContent = "";
 
-        $("#book-id").value = book ? book._id : "";
+        $("#book-id").value = book ? String(book.id) : "";
         $("#form-title").textContent = book ? "Edit book" : "Share a book";
 
         $("#title").value = book?.title || "";
@@ -119,11 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.innerHTML = filteredBooks.map(book => {
             const image = safeImageURL(book.image);
-            const id = escapeHTML(book._id);
-            const statusClass = ["Available", "Taken", "Exchanged"]
-                .includes(book.status)
-                ? book.status.toLowerCase()
-                : "available";
 
             return `
                 <article class="book-card">
@@ -151,11 +162,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         <p>Offer: ${escapeHTML(book.offer)}</p>
 
-                        <p>${escapeHTML(
-                            book.description || "No description provided."
-                        )}</p>
+                        <p>${escapeHTML(book.description || "No description provided.")}</p>
 
-                        <p class="book-status status-${statusClass}">
+                        <p class="book-status status-${escapeHTML(String(book.status).toLowerCase())}">
                             ${escapeHTML(book.status)}
                         </p>
 
@@ -166,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="contact"
-                                data-id="${id}">
+                                data-id="${escapeHTML(book.id)}">
                                 Contact owner
                             </button>
 
@@ -174,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="edit"
-                                data-id="${id}">
+                                data-id="${escapeHTML(book.id)}">
                                 Edit
                             </button>
 
@@ -182,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type="button"
                                 class="btn btn-outline"
                                 data-action="delete"
-                                data-id="${id}">
+                                data-id="${escapeHTML(book.id)}">
                                 Delete
                             </button>
 
@@ -192,9 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                             type="button"
                                             class="btn btn-primary"
                                             data-action="take"
-                                            data-id="${id}">
+                                            data-id="${escapeHTML(book.id)}">
                                             Mark as taken
-                                        </button>`
+                                       </button>`
                                     : ""
                             }
                         </div>
@@ -210,10 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const url = new URL(value);
 
-            if (
-                url.protocol === "https:" ||
-                url.protocol === "http:"
-            ) {
+            if (url.protocol === "https:" || url.protocol === "http:") {
                 return url.href;
             }
         } catch {
@@ -262,23 +268,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const editing = Boolean(id);
 
         try {
-            const response = await fetch(
-                editing ? `${API_URL}/${id}` : API_URL,
-                {
-                    method: editing ? "PUT" : "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+            if (editing) {
+                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
+                    method: "PUT",
                     body: JSON.stringify(book)
-                }
-            );
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    result.message || "Unable to save book."
-                );
+                });
+            } else {
+                await apiRequest(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(book)
+                });
             }
 
             closeForm();
@@ -325,7 +324,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const id = button.dataset.id;
         const action = button.dataset.action;
-        const book = books.find(item => item._id === id);
+
+        const book = books.find(
+            item => String(item.id) === String(id)
+        );
 
         if (!book) {
             showToast("Book not found.");
@@ -343,17 +345,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
                     method: "DELETE"
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message || "Unable to delete book."
-                    );
-                }
 
                 await loadBooks();
                 showToast("Book listing deleted.");
@@ -366,23 +360,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (action === "take") {
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
                     body: JSON.stringify({
                         status: "Taken"
                     })
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message || "Unable to update availability."
-                    );
-                }
 
                 await loadBooks();
                 showToast("Book marked as taken.");
@@ -394,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (action === "contact") {
-            const contact = (book.contact || "").trim();
+            const contact = book.contact.trim();
 
             if (!contact) {
                 showToast("No contact details available.");
@@ -405,18 +388,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (emailPattern.test(contact)) {
                 location.href = `mailto:${contact}`;
-            } else {
-                if (
-                    confirm(
-                        `Contact ${book.owner} using: ${contact}\n\nCopy these details?`
-                    )
-                ) {
-                    try {
-                        await navigator.clipboard.writeText(contact);
-                        showToast("Contact details copied.");
-                    } catch {
-                        showToast(`Contact details: ${contact}`);
-                    }
+            } else if (
+                confirm(`Contact ${book.owner} using: ${contact}\n\nCopy these details?`)
+            ) {
+                try {
+                    await navigator.clipboard.writeText(contact);
+                    showToast("Contact details copied.");
+                } catch {
+                    showToast(`Contact details: ${contact}`);
                 }
             }
         }
