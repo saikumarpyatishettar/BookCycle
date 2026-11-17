@@ -860,3 +860,178 @@ dialog::backdrop {
         gap: 0;
     }
 }
+
+
+/* BookCycle updated book-card and contact-form styles */
+
+.book-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: var(--navy);
+    font-size: 48px;
+    background: linear-gradient(145deg, #e8eef6, #f6f8fb);
+}
+
+.book-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 20px;
+    color: #375d89;
+    background: #edf3fa;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.book-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 12px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.book-status.status-available {
+    color: #176b3a;
+    background: #e3f6e9;
+}
+
+.book-status.status-taken {
+    color: #b42318;
+    background: #fde8e7;
+}
+
+.book-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 15px;
+}
+
+.book-actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.book-actions button:hover {
+    background: #f1f5fa;
+}
+
+.book-actions button.btn-primary {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: white;
+}
+
+.book-actions button.btn-primary:hover {
+    background: var(--navy-dark);
+}
+
+.book-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.contact-section {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #f7f9fc;
+}
+
+.contact-section h3 {
+    color: var(--navy);
+    font-size: 15px;
+}
+
+.contact-section p {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.contact-section label {
+    display: block;
+    margin: 14px 0 6px;
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.contact-section input {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: white;
+    color: var(--text);
+    outline: none;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .book-actions {
+        flex-direction: column;
+    }
+
+    .book-actions button {
+        width: 100%;
+    }
+}
+.owner-contact {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.contact-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 8px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s ease;
+    cursor: pointer;
+}
+
+.phone-button {
+    background: #e8f7ed;
+    color: #176b3a;
+    border: 1px solid #b9e5c7;
+}
+
+.email-button {
+    background: #edf2ff;
+    color: #3455a4;
+    border: 1px solid #cbd7fa;
+}
+
+.contact-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.96);
+}
+
+@media (max-width: 400px) {
+    .owner-contact {
+        flex-direction: column;
+    }
+}

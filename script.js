@@ -11,7 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorMessage = $("#form-error");
     const toast = $("#toast");
 
-const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
+    const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
+
     let books = [];
     let toastTimer;
 
@@ -39,7 +40,8 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
 
             books = data.map(book => ({
                 ...book,
-                id: book._id
+                id: book._id,
+                status: book.status === "Available" ? "Available" : "Taken"
             }));
 
             renderBooks();
@@ -83,7 +85,8 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
         $("#description").value = book?.description || "";
         $("#offer").value = book?.offer || "Share";
         $("#image-url").value = book?.image || "";
-        $("#contact").value = book?.contact || "";
+        $("#contact-number").value = book?.contactNumber || "";
+        $("#email").value = book?.email || "";
         $("#owner").value = book?.owner || "";
         $("#status").value = book?.status || "Available";
 
@@ -147,14 +150,13 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
             books.filter(book => book.status === "Available").length;
 
         $("#shared-books").textContent =
-            books.filter(book =>
-                ["Taken", "Exchanged"].includes(book.status)
-            ).length;
+            books.filter(book => book.status === "Taken").length;
 
         $("#empty-message").hidden = filteredBooks.length > 0;
 
         grid.innerHTML = filteredBooks.map(book => {
             const image = safeImageURL(book.image);
+            const available = book.status === "Available";
 
             return `
                 <article class="book-card">
@@ -186,20 +188,27 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
 
                         <p>${escapeHTML(book.description || "No description provided.")}</p>
 
-                        <p class="book-status status-${escapeHTML(String(book.status).toLowerCase())}">
-                            ${escapeHTML(book.status)}
+                        <p class="book-status ${available ? "status-available" : "status-taken"}">
+                            ${available ? "Available" : "Not Available"}
                         </p>
 
-                        <p>Shared by ${escapeHTML(book.owner)}</p>
+                    <p<div class="owner-contact">
+    <a
+        class="contact-button phone-button"
+        href="tel:${escapeHTML(book.contactNumber)}">
+        📞 Contact Number
+    </a>
 
+    <a
+        class="contact-button email-button"
+        href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(book.email || "")}"
+        target="_blank"
+        rel="noopener noreferrer">
+        ✉️ Email Owner
+    </a>
+</div>
                         <div class="book-actions">
-                            <button
-                                type="button"
-                                class="btn btn-outline"
-                                data-action="contact"
-                                data-id="${escapeHTML(book.id)}">
-                                Contact owner
-                            </button>
+                            
 
                             <button
                                 type="button"
@@ -209,22 +218,14 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
                                 Edit
                             </button>
 
-                            <button
-                                type="button"
-                                class="btn btn-outline"
-                                data-action="delete"
-                                data-id="${escapeHTML(book.id)}">
-                                Delete
-                            </button>
-
                             ${
-                                book.status === "Available"
+                                available
                                     ? `<button
                                             type="button"
                                             class="btn btn-primary"
                                             data-action="take"
                                             data-id="${escapeHTML(book.id)}">
-                                            Mark as taken
+                                            Mark as Taken
                                         </button>`
                                     : ""
                             }
@@ -247,7 +248,8 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
             description: $("#description").value.trim(),
             offer: $("#offer").value,
             image: $("#image-url").value.trim(),
-            contact: $("#contact").value.trim(),
+            contactNumber: $("#contact-number").value.trim(),
+            email: $("#email").value.trim(),
             owner: $("#owner").value.trim(),
             status: $("#status").value
         };
@@ -255,18 +257,26 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
         if (
             !book.title ||
             !book.author ||
-            !book.category ||
-            !book.contact ||
+            !book.contactNumber ||
+            !book.email ||
             !book.owner
         ) {
-            errorMessage.textContent =
-                "Please fill in all required fields.";
+            errorMessage.textContent = "Please fill in all required fields.";
+            return;
+        }
+
+        if (!/^\+?[0-9]{10,15}$/.test(book.contactNumber)) {
+            errorMessage.textContent = "Enter a valid contact number with 10 to 15 digits.";
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(book.email)) {
+            errorMessage.textContent = "Enter a valid email address.";
             return;
         }
 
         if (book.image && !safeImageURL(book.image)) {
-            errorMessage.textContent =
-                "Please enter a valid HTTP or HTTPS image URL.";
+            errorMessage.textContent = "Please enter a valid HTTP or HTTPS image URL.";
             return;
         }
 
@@ -280,6 +290,8 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
                     body: JSON.stringify(book)
                 });
             } else {
+                book.status = "Available";
+
                 await apiRequest(API_URL, {
                     method: "POST",
                     body: JSON.stringify(book)
@@ -345,26 +357,14 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
             return;
         }
 
-        if (action === "delete") {
-            if (!confirm(`Delete "${book.title}" from BookCycle?`)) {
+        if (action === "take") {
+            if (book.status !== "Available") {
+                showToast("This book is already marked as taken.");
                 return;
             }
 
-            try {
-                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
-                    method: "DELETE"
-                });
+            button.disabled = true;
 
-                await loadBooks();
-                showToast("Book listing deleted.");
-            } catch (error) {
-                showToast(error.message);
-            }
-
-            return;
-        }
-
-        if (action === "take") {
             try {
                 await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
                     method: "PUT",
@@ -374,37 +374,18 @@ const API_URL = "https://bookcycle-backend-9d12.onrender.com/api/books";
                 });
 
                 await loadBooks();
-                showToast("Book marked as taken.");
+                showToast("Book marked as not available.");
             } catch (error) {
+                button.disabled = false;
                 showToast(error.message);
             }
 
             return;
         }
 
-        if (action === "contact") {
-            const contact = book.contact.trim();
+         
 
-            if (!contact) {
-                showToast("No contact details available.");
-                return;
-            }
-
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (emailPattern.test(contact)) {
-                location.href = `mailto:${contact}`;
-            } else if (
-                confirm(`Contact ${book.owner} using: ${contact}\n\nCopy these details?`)
-            ) {
-                try {
-                    await navigator.clipboard.writeText(contact);
-                    showToast("Contact details copied.");
-                } catch {
-                    showToast(`Contact details: ${contact}`);
-                }
-            }
-        }
+           
     });
 
     loadBooks();
